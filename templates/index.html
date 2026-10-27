@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inkloom Brand Guardian</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+    <a class="brand" href="/">
+        <span class="logo">I</span>
+        Inkloom <span class="muted">Brand Guardian</span>
+    </a>
+    <span class="status">● Review workspace</span>
+</header>
+
+<main class="container">
+
+    <section class="hero">
+        <p class="eyebrow">BRAND GOVERNANCE</p>
+        <h1>Publish with <span>confidence.</span></h1>
+        <p>Check content against brand rules, understand potential
+           issues, and keep a human in control.</p>
+    </section>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <section class="workspace">
+
+        <div class="panel">
+            <p class="eyebrow">STEP 01</p>
+            <h2>Submit content</h2>
+
+            <form method="POST" action="/">
+                <label for="content">Marketing content</label>
+
+                <textarea id="content" name="content"
+                    maxlength="12000" required
+                    placeholder="Paste your marketing content here...">{{ content }}</textarea>
+
+                <p class="hint">
+                    Do not include confidential customer information.
+                </p>
+
+                <label for="mode">Review method</label>
+                <select id="mode" name="mode">
+                    <option value="rules"
+                        {% if selected_mode == 'rules' %}selected{% endif %}>
+                        Brand rules only
+                    </option>
+                    <option value="ai"
+                        {% if selected_mode == 'ai' %}selected{% endif %}>
+                        AI-assisted review
+                    </option>
+                </select>
+
+                <button class="primary full" type="submit">
+                    Check content →
+                </button>
+            </form>
+
+            <div class="rules">
+                <h3>Sample brand rules</h3>
+                <p><b>Restricted:</b> guaranteed, risk-free</p>
+                <p><b>Required:</b> Terms and conditions apply</p>
+                <p><b>Verify:</b> percentages and absolute promises</p>
+            </div>
+        </div>
+
+        <div class="panel">
+            <p class="eyebrow">STEP 02</p>
+            <h2>Review findings</h2>
+
+            {% if result %}
+
+                <div class="summary">
+                    <strong>Check completed</strong>
+                    <p>{{ result.summary }}</p>
+                    <small>{{ result.checked_at }}</small>
+                </div>
+
+                {% for issue in result.issues %}
+                    <article class="issue">
+                        <span class="severity {{ issue.severity|lower }}">
+                            {{ issue.severity }}
+                        </span>
+
+                        <h3>{{ issue.type }}</h3>
+
+                        {% if issue.matched_text %}
+                            <blockquote>
+                                {{ issue.matched_text }}
+                            </blockquote>
+                        {% endif %}
+
+                        <p>{{ issue.explanation }}</p>
+
+                        <div class="suggestion">
+                            <strong>Suggested next step</strong>
+                            <p>{{ issue.suggestion }}</p>
+                        </div>
+
+                        <small>Rule: {{ issue.rule }}</small>
+                    </article>
+                {% endfor %}
+
+                <div class="human">
+                    <p class="eyebrow">STEP 03</p>
+                    <h2>Human decision</h2>
+                    <p>Review the findings before deciding what happens next.</p>
+
+                    <form method="POST" action="{{ url_for('decision') }}">
+                        <label for="decision">Decision</label>
+                        <select name="decision" id="decision" required>
+                            <option value="">Choose decision</option>
+                            <option value="Approved">Approve</option>
+                            <option value="Needs revision">Needs revision</option>
+                            <option value="Rejected">Reject</option>
+                        </select>
+
+                        <label for="review_note">Reviewer note (optional)</label>
+                        <input type="text" id="review_note"
+                               name="review_note" maxlength="500"
+                               placeholder="Explain your decision">
+
+                        <button class="primary full" type="submit">
+                            Confirm decision
+                        </button>
+                    </form>
+
+                    <p class="hint">
+                        Demo limitation: decisions are not saved permanently.
+                    </p>
+                </div>
+
+            {% else %}
+
+                <div class="empty">
+                    <div class="empty-icon">✓</div>
+                    <h3>Your findings appear here</h3>
+                    <p>Submit content to see potential issues, explanations,
+                       suggestions, and the human review step.</p>
+                    <div class="flow">CONTENT → CHECK → DECISION</div>
+                </div>
+
+            {% endif %}
+        </div>
+
+    </section>
+
+    <div class="notice">
+        <strong>Human review matters.</strong>
+        Automated checks can miss context. Verify claims against approved
+        evidence before publishing.
+    </div>
+
+    <footer>
+        Inkloom Brand Guardian · CodeStar 30 · Round 2 MVP
+    </footer>
+
+</main>
+</body>
+</html>
