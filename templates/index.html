@@ -1,170 +1,333 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Inkloom Brand Guardian</title>
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-
-<header class="topbar">
-    <a class="brand" href="/">
-        <span class="logo">I</span>
-        Inkloom <span class="muted">Brand Guardian</span>
-    </a>
-    <span class="status">● Review workspace</span>
-</header>
-
-<main class="container">
-
-    <section class="hero">
-        <p class="eyebrow">BRAND GOVERNANCE</p>
-        <h1>Publish with <span>confidence.</span></h1>
-        <p>Check content against brand rules, understand potential
-           issues, and keep a human in control.</p>
-    </section>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for category, message in messages %}
-        <div class="flash {{ category }}">{{ message }}</div>
-      {% endfor %}
-    {% endwith %}
-
-    <section class="workspace">
-
-        <div class="panel">
-            <p class="eyebrow">STEP 01</p>
-            <h2>Submit content</h2>
-
-            <form method="POST" action="/">
-                <label for="content">Marketing content</label>
-
-                <textarea id="content" name="content"
-                    maxlength="12000" required
-                    placeholder="Paste your marketing content here...">{{ content }}</textarea>
-
-                <p class="hint">
-                    Do not include confidential customer information.
-                </p>
-
-                <label for="mode">Review method</label>
-                <select id="mode" name="mode">
-                    <option value="rules"
-                        {% if selected_mode == 'rules' %}selected{% endif %}>
-                        Brand rules only
-                    </option>
-                    <option value="ai"
-                        {% if selected_mode == 'ai' %}selected{% endif %}>
-                        AI-assisted review
-                    </option>
-                </select>
-
-                <button class="primary full" type="submit">
-                    Check content →
-                </button>
-            </form>
-
-            <div class="rules">
-                <h3>Sample brand rules</h3>
-                <p><b>Restricted:</b> guaranteed, risk-free</p>
-                <p><b>Required:</b> Terms and conditions apply</p>
-                <p><b>Verify:</b> percentages and absolute promises</p>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static',filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <header>
+      <a class="logo" href="{{ url_for('home') }}"
+        ><i>I</i> Inkloom <span>Brand Guardian</span></a
+      >
+      <nav>
+        <a href="{{ url_for('home') }}">Workspace</a
+        ><a href="{{ url_for('policy') }}">Brand Policy</a
+        ><a href="{{ url_for('history') }}">Review History</a>
+      </nav>
+    </header>
+    <main>
+      {% with msgs=get_flashed_messages(with_categories=true) %}{% for cat,msg
+      in msgs %}
+      <div class="flash {{ cat }}">{{ msg }}</div>
+      {% endfor %}{% endwith %} {% if page=='home' %}
+      <section class="hero">
+        <div>
+          <small>BRAND GOVERNANCE WORKSPACE</small>
+          <h1>Publish with <em>confidence.</em></h1>
+          <p>
+            Review content against approved brand policy, understand risks, and
+            record a human decision.
+          </p>
+        </div>
+        <span class="chip">● Human-in-the-loop review</span>
+      </section>
+      <div class="stats">
+        <article>
+          <small>Total reviews</small><strong>{{ total }}</strong>
+          <p>Saved audit records</p>
+        </article>
+        <article>
+          <small>Awaiting decision</small><strong>{{ pending }}</strong>
+          <p>Human action required</p>
+        </article>
+        <article>
+          <small>Active policy</small
+          ><strong class="brandstat">{{ policy.brand_name }}</strong>
+          <p>Editable guardrails</p>
+        </article>
+      </div>
+      <div class="columns">
+        <section class="card">
+          <small>01 / CONTENT INPUT</small>
+          <h2>Review content</h2>
+          <p class="muted">
+            Paste a campaign, social post, product description, or draft.
+          </p>
+          <form action="{{ url_for('review') }}" method="post">
+            <label for="content">Content to check</label
+            ><textarea
+              id="content"
+              name="content"
+              maxlength="20000"
+              rows="9"
+              required
+              placeholder="Example: Our product is guaranteed to work for everyone..."
+            ></textarea>
+            <div class="formfoot">
+              <small>Maximum 20,000 characters</small
+              ><button>Run brand review →</button>
             </div>
+          </form>
+          <div class="note">
+            <b>✦ Human stays in control.</b>
+            <p>
+              Automated findings are guidance, not proof. Verify facts and
+              decide before publishing.
+            </p>
+          </div>
+        </section>
+        <aside class="card">
+          <small>02 / ACTIVE GUARDRAILS</small>
+          <h2>Brand policy</h2>
+          <div class="rule">
+            <b>Brand voice</b>
+            <p>{{ policy.tone or 'No tone guidance configured.' }}</p>
+          </div>
+          <div class="rule">
+            <b>Required phrases</b>
+            <p>{{ policy.required_phrases|length }} configured</p>
+          </div>
+          <div class="rule">
+            <b>Restricted terms</b>
+            <p>{{ policy.restricted_terms|length }} configured</p>
+          </div>
+          <div class="rule">
+            <b>Verified facts</b>
+            <p>{{ policy.verified_facts|length }} reference facts</p>
+          </div>
+          <a class="button secondary full" href="{{ url_for('policy') }}"
+            >Manage brand policy</a
+          >
+        </aside>
+      </div>
+      <section class="card">
+        <div class="sectionhead">
+          <div>
+            <small>03 / AUDIT TRAIL</small>
+            <h2>Recent reviews</h2>
+          </div>
+          <a href="{{ url_for('history') }}">View all →</a>
         </div>
-
-        <div class="panel">
-            <p class="eyebrow">STEP 02</p>
-            <h2>Review findings</h2>
-
-            {% if result %}
-
-                <div class="summary">
-                    <strong>Check completed</strong>
-                    <p>{{ result.summary }}</p>
-                    <small>{{ result.checked_at }}</small>
-                </div>
-
-                {% for issue in result.issues %}
-                    <article class="issue">
-                        <span class="severity {{ issue.severity|lower }}">
-                            {{ issue.severity }}
-                        </span>
-
-                        <h3>{{ issue.type }}</h3>
-
-                        {% if issue.matched_text %}
-                            <blockquote>
-                                {{ issue.matched_text }}
-                            </blockquote>
-                        {% endif %}
-
-                        <p>{{ issue.explanation }}</p>
-
-                        <div class="suggestion">
-                            <strong>Suggested next step</strong>
-                            <p>{{ issue.suggestion }}</p>
-                        </div>
-
-                        <small>Rule: {{ issue.rule }}</small>
-                    </article>
-                {% endfor %}
-
-                <div class="human">
-                    <p class="eyebrow">STEP 03</p>
-                    <h2>Human decision</h2>
-                    <p>Review the findings before deciding what happens next.</p>
-
-                    <form method="POST" action="{{ url_for('decision') }}">
-                        <label for="decision">Decision</label>
-                        <select name="decision" id="decision" required>
-                            <option value="">Choose decision</option>
-                            <option value="Approved">Approve</option>
-                            <option value="Needs revision">Needs revision</option>
-                            <option value="Rejected">Reject</option>
-                        </select>
-
-                        <label for="review_note">Reviewer note (optional)</label>
-                        <input type="text" id="review_note"
-                               name="review_note" maxlength="500"
-                               placeholder="Explain your decision">
-
-                        <button class="primary full" type="submit">
-                            Confirm decision
-                        </button>
-                    </form>
-
-                    <p class="hint">
-                        Demo limitation: decisions are not saved permanently.
-                    </p>
-                </div>
-
-            {% else %}
-
-                <div class="empty">
-                    <div class="empty-icon">✓</div>
-                    <h3>Your findings appear here</h3>
-                    <p>Submit content to see potential issues, explanations,
-                       suggestions, and the human review step.</p>
-                    <div class="flow">CONTENT → CHECK → DECISION</div>
-                </div>
-
-            {% endif %}
+        {% if recent %}{% for r in recent %}<a
+          class="recent"
+          href="{{ url_for('detail',rid=r.id) }}"
+          ><b>#{{ r.id }}</b
+          ><span class="excerpt"
+            >{{ r.content[:90] }}{% if r.content|length>90 %}…{% endif %}<small
+              >{{ r.created[:19]|replace('T',' ') }} UTC</small
+            ></span
+          ><span class="pill {{ 'warn' if r.status=='Needs revision' else '' }}"
+            >{{ r.status }}</span
+          ><span class="decision">{{ r.decision }}</span>↗</a
+        >{% endfor %}{% else %}
+        <p class="empty">
+          Your audit trail starts here. Submit content to create your first
+          saved review.
+        </p>
+        {% endif %}
+      </section>
+      {% elif page=='policy' %}
+      <section class="pagehead">
+        <small>POLICY SETTINGS</small>
+        <h1>Define your <em>brand guardrails.</em></h1>
+        <p>
+          These settings are stored in SQLite and applied to each new review.
+        </p>
+      </section>
+      <form class="card policyform" method="post">
+        <section>
+          <small>01 / IDENTITY</small>
+          <h2>Brand identity and voice</h2>
+          <label>Brand name</label
+          ><input
+            name="brand_name"
+            value="{{ policy.brand_name }}"
+            required
+            maxlength="100"
+          /><label>Approved brand tone</label
+          ><textarea name="tone" rows="3">{{ policy.tone }}</textarea
+          ><label>Additional policy notes</label
+          ><textarea name="notes" rows="3">{{ policy.notes }}</textarea>
+        </section>
+        <div class="twocol">
+          <section>
+            <small>02 / REQUIRED LANGUAGE</small>
+            <h2>Required phrases</h2>
+            <p class="muted">One phrase per line.</p>
+            <textarea name="required_phrases" rows="7">
+{{ policy.required_phrases|join('\n') }}</textarea
+            >
+          </section>
+          <section>
+            <small>03 / RESTRICTED LANGUAGE</small>
+            <h2>Restricted terms</h2>
+            <p class="muted">One term per line. Matches are high priority.</p>
+            <textarea name="restricted_terms" rows="7">
+{{ policy.restricted_terms|join('\n') }}</textarea
+            >
+          </section>
         </div>
-
-    </section>
-
-    <div class="notice">
-        <strong>Human review matters.</strong>
-        Automated checks can miss context. Verify claims against approved
-        evidence before publishing.
-    </div>
-
+        <section>
+          <small>04 / KNOWLEDGE BASE</small>
+          <h2>Verified facts</h2>
+          <p class="muted">
+            One approved fact per line. Use these as reference context; verify
+            important claims manually.
+          </p>
+          <textarea name="verified_facts" rows="6">
+{{ policy.verified_facts|join('\n') }}</textarea
+          >
+        </section>
+        <div class="actions">
+          <a class="button secondary" href="{{ url_for('home') }}">Cancel</a
+          ><button>Save policy →</button>
+        </div>
+      </form>
+      {% elif page=='history' %}
+      <section class="pagehead">
+        <small>AUDIT TRAIL</small>
+        <h1>Review <em>history.</em></h1>
+        <p>Saved submissions, findings, and human decisions.</p>
+      </section>
+      <section class="card">
+        <div class="tools">
+          <form method="get">
+            <input
+              name="q"
+              value="{{ query }}"
+              placeholder="Search content or summary"
+            /><button>Search</button>
+          </form>
+          <a class="button secondary" href="{{ url_for('export_csv') }}"
+            >Export CSV ↓</a
+          >
+        </div>
+        {% if reviews %}
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Content</th>
+                <th>Automated result</th>
+                <th>Human decision</th>
+                <th>Created (UTC)</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in reviews %}
+              <tr>
+                <td>#{{ r.id }}</td>
+                <td>
+                  {{ r.content[:95] }}{% if r.content|length>95 %}…{% endif %}
+                </td>
+                <td>
+                  <span
+                    class="pill {{ 'warn' if r.status=='Needs revision' else '' }}"
+                    >{{ r.status }}</span
+                  >
+                </td>
+                <td>{{ r.decision }}</td>
+                <td>{{ r.created[:19]|replace('T',' ') }}</td>
+                <td><a href="{{ url_for('detail',rid=r.id) }}">Open ↗</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="empty">No matching reviews yet.</p>
+        {% endif %}
+      </section>
+      {% elif page=='detail' %}
+      <a class="back" href="{{ url_for('history') }}">← Review history</a>
+      <section class="pagehead">
+        <small
+          >CONTENT REVIEW · {{ review.created[:19]|replace('T',' ') }}
+          UTC</small
+        >
+        <h1>Review <em>#{{ review.id }}</em></h1>
+        <span
+          class="pill {{ 'warn' if review.status=='Needs revision' else '' }}"
+          >{{ review.status }}</span
+        >
+        <span class="decision">Human decision: {{ review.decision }}</span>
+      </section>
+      <div class="columns detail">
+        <section class="card">
+          <small>SUBMITTED CONTENT</small>
+          <h2>Original draft</h2>
+          <div class="submitted">{{ review.content }}</div>
+          <div class="note">
+            <b>Review summary</b>
+            <p>{{ review.summary }}</p>
+          </div>
+          {% if review.suggestion %}
+          <div class="suggestion">
+            <b>Suggested revision (AI-generated)</b>
+            <p>{{ review.suggestion }}</p>
+            <small>Review and edit before using.</small>
+          </div>
+          {% endif %}
+        </section>
+        <section class="card">
+          <small>FINDINGS</small>
+          <h2>{{ review.findings|length }} finding(s)</h2>
+          {% for f in review.findings %}
+          <article class="finding">
+            <span class="severity {{ f.severity|lower }}">{{ f.severity }}</span
+            ><b>{{ f.category }}</b>
+            <p>{{ f.issue }}</p>
+            <div class="recommend">
+              <b>Recommended action</b>
+              <p>{{ f.recommendation }}</p>
+            </div>
+          </article>
+          {% endfor %}
+        </section>
+      </div>
+      <section class="card decisionform">
+        <small>HUMAN-IN-THE-LOOP</small>
+        <h2>Record your decision</h2>
+        <p class="muted">
+          The automated result never publishes content. A human reviewer records
+          the final decision.
+        </p>
+        <form method="post" action="{{ url_for('decide',rid=review.id) }}">
+          <label>Final human decision</label
+          ><select name="decision" required>
+            {% for op in ['Approved','Needs revision','Rejected'] %}
+            <option {% if review.decision="" ="op" %}selected{% endif %}>
+              {{ op }}
+            </option>
+            {% endfor %}</select
+          ><label>Reviewer note</label
+          ><textarea
+            name="note"
+            rows="3"
+            maxlength="2000"
+            placeholder="Why did you approve, revise, or reject this content?"
+          >
+{{ review.note }}</textarea
+          >
+          <div class="actions"><button>Save human decision →</button></div>
+        </form>
+        {% if review.decided %}<small
+          >Decision last saved: {{ review.decided[:19]|replace('T',' ') }}
+          UTC</small
+        >{% endif %}
+      </section>
+      {% endif %}
+    </main>
     <footer>
-        Inkloom Brand Guardian · CodeStar 30 · Round 2 MVP
+      <b>Inkloom Brand Guardian</b
+      ><span>AI assists. People decide. Verify claims before publishing.</span>
     </footer>
-
-</main>
-</body>
+  </body>
 </html>
