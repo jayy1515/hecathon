@@ -303,7 +303,11 @@
           <label>Final human decision</label
           ><select name="decision" required>
             {% for op in ['Approved','Needs revision','Rejected'] %}
-            <option {% if review.decision="" ="op" %}selected{% endif %}>
+            {% for op in ['Approved', 'Needs revision', 'Rejected'] %}
+    <option value="{{ op }}" {% if review.decision == op %}selected{% endif %}>
+        {{ op }}
+    </option>
+      {% endfor %}
               {{ op }}
             </option>
             {% endfor %}</select
