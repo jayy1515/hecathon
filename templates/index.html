@@ -299,36 +299,33 @@
           The automated result never publishes content. A human reviewer records
           the final decision.
         </p>
-        <form method="post" action="{{ url_for('decide',rid=review.id) }}">
-          <label>Final human decision</label>
-          <select name="decision" required>
-            {% for op in ['Approved', 'Needs revision', 'Rejected'] %}
-            <option
-              value="{{ op }}"
-              {%
-              if
-              review.decision=""
-              ="op"
-              %}selected{%
-              endif
-              %}
-            >
-              {{ op }}
-            </option>
-            {% endfor %}
-          </select>
+       <form method="post" action="{{ url_for('decide', rid=review.id) }}">
 
-          <label>Reviewer note</label>
-          <textarea
-            name="note"
-            rows="3"
-            maxlength="2000"
-            placeholder="Why did you approve, revise, or reject this content?"
-          >
-            {{ review.note }}
-          </textarea>
-          <div class="actions"><button>Save human decision →</button></div>
-        </form>
+    <label>Final human decision</label>
+
+    <select name="decision" required>
+        {% for op in ['Approved', 'Needs revision', 'Rejected'] %}
+            <option value="{{ op }}"
+                {% if review.decision == op %}selected{% endif %}>
+                {{ op }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label>Reviewer note</label>
+
+    <textarea
+        name="note"
+        rows="3"
+        maxlength="2000"
+        placeholder="Why did you approve, revise, or reject this content?"
+    >{{ review.note }}</textarea>
+
+    <div class="actions">
+        <button type="submit">Save human decision</button>
+    </div>
+
+</form>
         {% if review.decided %}<small
           >Decision last saved: {{ review.decided[:19]|replace('T',' ') }}
           UTC</small
