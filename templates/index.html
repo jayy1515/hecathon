@@ -8,6 +8,26 @@
       rel="stylesheet"
       href="{{ url_for('static',filename='style.css') }}"
     />
+    <style>
+      .danger {
+        background: #a83232;
+        color: #fff;
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        cursor: pointer;
+      }
+      .danger:hover {
+        background: #842626;
+      }
+      .danger.small {
+        padding: 7px 10px;
+        font-size: 0.85rem;
+      }
+      .actions form {
+        display: inline;
+      }
+    </style>
   </head>
   <body>
     <header>
@@ -203,9 +223,23 @@
               placeholder="Search content or summary"
             /><button>Search</button>
           </form>
-          <a class="button secondary" href="{{ url_for('export_csv') }}"
-            >Export CSV ↓</a
-          >
+          <div class="actions">
+            <a class="button secondary" href="{{ url_for('export_csv') }}"
+              >Export CSV ↓</a
+            >{% if reviews %}
+            <form
+              method="post"
+              action="{{ url_for('clear_history') }}"
+              onsubmit="
+                return confirm(
+                  'Delete ALL review history? This cannot be undone.',
+                );
+              "
+            >
+              <button class="danger" type="submit">Clear all history</button>
+            </form>
+            {% endif %}
+          </div>
         </div>
         {% if reviews %}
         <div class="tablewrap">
@@ -235,7 +269,18 @@
                 </td>
                 <td>{{ r.decision }}</td>
                 <td>{{ r.created[:19]|replace('T',' ') }}</td>
-                <td><a href="{{ url_for('detail',rid=r.id) }}">Open ↗</a></td>
+                <td>
+                  <div class="actions">
+                    <a href="{{ url_for('detail',rid=r.id) }}">Open ↗</a>
+                    <form
+                      method="post"
+                      action="{{ url_for('delete_review',rid=r.id) }}"
+                      onsubmit="return confirm('Delete review #{{ r.id }}? This cannot be undone.');"
+                    >
+                      <button class="danger small" type="submit">Delete</button>
+                    </form>
+                  </div>
+                </td>
               </tr>
               {% endfor %}
             </tbody>
@@ -247,6 +292,13 @@
       </section>
       {% elif page=='detail' %}
       <a class="back" href="{{ url_for('history') }}">← Review history</a>
+      <form
+        method="post"
+        action="{{ url_for('delete_review',rid=review.id) }}"
+        onsubmit="return confirm('Delete review #{{ review.id }}? This cannot be undone.');"
+      >
+        <button class="danger small" type="submit">Delete this review</button>
+      </form>
       <section class="pagehead">
         <small
           >CONTENT REVIEW · {{ review.created[:19]|replace('T',' ') }}
@@ -299,33 +351,25 @@
           The automated result never publishes content. A human reviewer records
           the final decision.
         </p>
-       <form method="post" action="{{ url_for('decide', rid=review.id) }}">
-
-    <label>Final human decision</label>
-
-    <select name="decision" required>
-        {% for op in ['Approved', 'Needs revision', 'Rejected'] %}
-            <option value="{{ op }}"
-                {% if review.decision == op %}selected{% endif %}>
-                {{ op }}
+        <form method="post" action="{{ url_for('decide',rid=review.id) }}">
+          <label>Final human decision</label
+          ><select name="decision" required>
+            {% for op in ['Approved','Needs revision','Rejected'] %}
+            <option {% if review.decision="" ="op" %}selected{% endif %}>
+              {{ op }}
             </option>
-        {% endfor %}
-    </select>
-
-    <label>Reviewer note</label>
-
-    <textarea
-        name="note"
-        rows="3"
-        maxlength="2000"
-        placeholder="Why did you approve, revise, or reject this content?"
-    >{{ review.note }}</textarea>
-
-    <div class="actions">
-        <button type="submit">Save human decision</button>
-    </div>
-
-</form>
+            {% endfor %}</select
+          ><label>Reviewer note</label
+          ><textarea
+            name="note"
+            rows="3"
+            maxlength="2000"
+            placeholder="Why did you approve, revise, or reject this content?"
+          >
+{{ review.note }}</textarea
+          >
+          <div class="actions"><button>Save human decision →</button></div>
+        </form>
         {% if review.decided %}<small
           >Decision last saved: {{ review.decided[:19]|replace('T',' ') }}
           UTC</small

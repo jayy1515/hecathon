@@ -328,6 +328,26 @@ def decide(rid):
     return redirect(url_for("detail", rid=rid))
 
 
+@app.route("/review/<int:rid>/delete", methods=["POST"])
+def delete_review(rid):
+    with db() as c:
+        cur = c.execute("DELETE FROM reviews WHERE id=?", (rid,))
+    if cur.rowcount == 0:
+        flash("Review not found or already deleted.", "error")
+    else:
+        flash(f"Review #{rid} deleted from history.", "success")
+    return redirect(url_for("history"))
+
+
+@app.route("/history/clear", methods=["POST"])
+def clear_history():
+    with db() as c:
+        cur = c.execute("DELETE FROM reviews")
+        deleted_count = cur.rowcount
+    flash(f"All review history cleared ({deleted_count} review(s) deleted).", "success")
+    return redirect(url_for("history"))
+
+
 @app.route("/export.csv")
 def export_csv():
     import csv, io
